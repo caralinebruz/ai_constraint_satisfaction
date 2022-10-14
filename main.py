@@ -14,21 +14,7 @@ from pprint import pprint
 num_colors = ""
 
 
-class Node:
-	def __init__(self,name):
-		self.name = name
-		self.value = None
-		self.children = []
-		self.parents = []
 
-	def add_child(self, child):
-		child.parents.append(self)
-		self.children.append(child)
-
-
-# store all the node objects by their node name
-# could have used a tree data structure for this but alas, i didnot. 
-created_node_objects = {}
 nodes_list = []
 node_adjacency_mappings = {}
 
@@ -69,8 +55,59 @@ def parse_input(lines):
 	return nodes_list, node_adjacency_mappings
 
 
-def build_adjacency(nodes_list,node_adjacency_mappings):
-	pass
+def build_adjacency(nodes_list, node_adjacency_mappings):
+	''' Create the adjacency matrix
+	'''
+	print("creating adj matrix ...")
+	cols = nodes_list
+	cols.sort()
+	print(cols)
+		# now they are in ascending order
+
+	num = len(cols)
+	index = {}
+
+	i = 0
+	for node_name in cols:
+		index[node_name] = i
+		i = i + 1
+
+	adj = [[0 for col in range(num)] for row in range(num)]
+
+	print("adjacency matrix before:")
+	for a in adj:
+		print("\t", end="")
+		print(a)
+
+	for from_node, to_list in node_adjacency_mappings.items():
+		index_num_row = index[from_node]
+		# print("ROW -- %s: %s" % (from_node, index_num_row))
+
+		if to_list is None:
+			continue
+		else:
+			for to_node in to_list:
+
+				index_num_col = index[to_node]
+				adj[index_num_row][index_num_col] +=1
+
+
+				# DONT KNOW IF I WANT THIS RIGHT NOW.
+				# # if you want to make the graph symmetric:
+				# print("%s ->> %s" % (from_node,to_node))
+				# index_num_row_rev = index[to_node]
+				# index_num_column_rev = index[from_node]
+				# adj[index_num_row_rev][index_num_column_rev] +=1
+
+
+
+
+	print("adjacency matrix:")
+	for a in adj:
+		print("\t", end="")
+		print(a)
+
+	return adj, index, num, cols
 
 
 if __name__ == '__main__':
@@ -102,6 +139,7 @@ if __name__ == '__main__':
 
 	# First, parse the input graph file
 	nodes_list, node_adjacency_mappings = parse_input(lines)
+
 	# create the adjacency matrix
 	build_adjacency(nodes_list, node_adjacency_mappings)
 
