@@ -131,17 +131,19 @@ def get_alphaname(x,index):
 	# ex. 3rd row of adj means return "NSW"
 	for k,v in index.items():
 		if v==x:
-			return k
+			return str(k)
 
 
 use_colors = [Color.RED, Color.GREEN, Color.BLUE]
 
 def rule_1_at_least_one_color(x, index):
+	''' Returns a single rule
+	'''
 	rules = []
 	alphaname = get_alphaname(x, index)
 
 	for color in use_colors:
-		atom = str(alphaname) + '_' + str(color)
+		atom = alphaname + '_' + str(color)
 		rules.append(atom)
 
 	rule_1 = ' '.join(rules)
@@ -149,7 +151,11 @@ def rule_1_at_least_one_color(x, index):
 
 
 def rule_2_adjacencies_no_share(x, adj, index):
+	'''
+	RETURNS A LIST OF RULES
+	'''
 
+	print("creating rule 2...")
 	'''
 		!V_R !NSW_R
 		!V_R !SA_R
@@ -158,10 +164,45 @@ def rule_2_adjacencies_no_share(x, adj, index):
 		!V_B !NSW_B
 		!V_B !SA_B
 	'''
+	rules = []
+
+	primary_alphaname = get_alphaname(x, index)
+	row = adj[x]
+
+	for color in use_colors:
+
+
+		# first half of the rule
+		# !V_Color.RED
+		left_rule = '!' + primary_alphaname + '_' + str(color)
 
 
 
-	pass
+		# second half of the rule
+		# for any adjacency of the current row
+		for adjacent_index in range(len(row)):
+
+			adjacency = adj[x][adjacent_index]
+			if adjacency > 0:
+
+				# use this in rule creation
+				# look up the alphaname of said adjacney
+				adjacent_alphaname = get_alphaname(adjacent_index, index)
+
+				right_rule = '!' + adjacent_alphaname + '_' + str(color)
+				
+
+				rule = left_rule + ' ' + right_rule
+				#print(rule)
+
+				rules.append(rule)
+
+
+
+	return rules
+
+
+
 
 
 def graph_constraints(adj,index,cols):
@@ -176,12 +217,16 @@ def graph_constraints(adj,index,cols):
 
 			# method to create rule #1
 			rule_1 = rule_1_at_least_one_color(x, index)
-			print(rule_1)
+			#print(rule_1)
 
 			# method to create rule #2
-			rule_2 = rule_2_adjacencies_no_share(x, adj, index)
-			print(rule_2)
+			rules_2 = rule_2_adjacencies_no_share(x, adj, index)
+			# ^ a list of rules
 
+
+			print(rule_1)
+			for r in rules_2:
+				print(r)
 
 
 
