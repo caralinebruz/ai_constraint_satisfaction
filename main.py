@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys, getopt
 import argparse
+from enum import Enum
 
 import pprint
 from pprint import pprint
@@ -11,8 +12,18 @@ from pprint import pprint
 
 	USAGE: ./main.py [-v] $ncolors $input-file
 '''
+
 num_colors = ""
 
+
+class Color(Enum):
+	RED = 1
+	GREEN = 2
+	BLUE = 3
+	YELLOW = 4
+
+
+colors_temp = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW]
 
 
 nodes_list = []
@@ -27,24 +38,25 @@ def parse_input(lines):
 	lines = [line.rstrip('\n') for line in lines]
 
 	for line in lines:
-		# we know it is a list of child nodes
-		data = line.split(':')
+		if ":" in line:
+			# we know it is a list of child nodes
+			data = line.split(':')
 
-		# 1. save the name of the node
-		node_name = data[0].strip(' ')
-		if node_name not in nodes_list:
-			nodes_list.append(node_name)
+			# 1. save the name of the node
+			node_name = data[0].strip(' ')
+			if node_name not in nodes_list:
+				nodes_list.append(node_name)
 
-		# 2. add the children of this to the node_adjacency_mappings
-		children = data[1].lstrip()
-		children = children.strip('[] ').split(', ')
+			# 2. add the children of this to the node_adjacency_mappings
+			children = data[1].lstrip()
+			children = children.strip('[] ').split(', ')
 
-		node_adjacency_mappings[node_name] = children
+			node_adjacency_mappings[node_name] = children
 
-		# check to also add leaf nodes
-		for i in children:
-			if i not in nodes_list:
-				nodes_list.append(i)
+			# check to also add leaf nodes
+			for i in children:
+				if i not in nodes_list:
+					nodes_list.append(i)
 
 
 	print("names of all nodes in the graph:")
@@ -91,15 +103,11 @@ def build_adjacency(nodes_list, node_adjacency_mappings):
 				index_num_col = index[to_node]
 				adj[index_num_row][index_num_col] +=1
 
-
-				# DONT KNOW IF I WANT THIS RIGHT NOW.
-				# # if you want to make the graph symmetric:
-				# print("%s ->> %s" % (from_node,to_node))
-				# index_num_row_rev = index[to_node]
-				# index_num_column_rev = index[from_node]
-				# adj[index_num_row_rev][index_num_column_rev] +=1
-
-
+				# make the adj matrix symmetric:
+				print("%s ->> %s" % (from_node,to_node))
+				index_num_row_rev = index[to_node]
+				index_num_column_rev = index[from_node]
+				adj[index_num_row_rev][index_num_column_rev] +=1
 
 
 	print("adjacency matrix:")
@@ -108,6 +116,15 @@ def build_adjacency(nodes_list, node_adjacency_mappings):
 		print(a)
 
 	return adj, index, num, cols
+
+
+
+
+def graph_constraints(adj,index,cols):
+
+	pass
+
+
 
 
 if __name__ == '__main__':
@@ -138,12 +155,17 @@ if __name__ == '__main__':
 
 
 	# First, parse the input graph file
+	# graph = parseInput(filename)
 	nodes_list, node_adjacency_mappings = parse_input(lines)
 
 	# create the adjacency matrix
-	build_adjacency(nodes_list, node_adjacency_mappings)
+	adj, index, num, cols = build_adjacency(nodes_list, node_adjacency_mappings)
 
-	# tree_node = setup.build_tree(nodes_list, leaf_values, node_adjacency_mappings)
+	# Second, generate CNF clauses
+	clauses = graph_constraints(adj,index,cols)
+
+
+
 
 
 	# tree = game_setup(lines)
