@@ -39,6 +39,8 @@ def parse_input(lines):
 
 	for line in lines:
 		if ":" in line:
+
+			print(line)
 			# we know it is a list of child nodes
 			data = line.split(':')
 
@@ -50,13 +52,16 @@ def parse_input(lines):
 			# 2. add the children of this to the node_adjacency_mappings
 			children = data[1].lstrip()
 			children = children.strip('[] ').split(', ')
+			print(children)
 
-			node_adjacency_mappings[node_name] = children
+			# https://pythonexamples.org/check-if-all-strings-in-python-list-are-not-empty
+			# true if all the strings are non-empty
+			if all(children):
+				node_adjacency_mappings[node_name] = children
 
-			# check to also add leaf nodes
-			for i in children:
-				if i not in nodes_list:
-					nodes_list.append(i)
+				for i in children:
+					if i not in nodes_list:
+						nodes_list.append(i)
 
 
 	print("names of all nodes in the graph:")
@@ -109,6 +114,9 @@ def build_adjacency(nodes_list, node_adjacency_mappings):
 				index_num_column_rev = index[from_node]
 				adj[index_num_row_rev][index_num_column_rev] +=1
 
+	print("index:")
+	for k,v in index.items():
+		print("\t%s:%s" % (k,v))
 
 	print("adjacency matrix:")
 	for a in adj:
