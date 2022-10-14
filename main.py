@@ -139,6 +139,7 @@ use_colors = [Color.RED, Color.GREEN, Color.BLUE]
 def rule_1_at_least_one_color(x, index):
 	''' Returns a single rule
 	'''
+	print("creating rule 1 ...")
 	rules = []
 	alphaname = get_alphaname(x, index)
 
@@ -211,22 +212,22 @@ def graph_constraints(adj,index,cols):
 	print("starting constraints logic...")
 
 	for x in range(len(cols)):
-		if x == index['V']: # just do one row for simple case
+	# if x == index['V']: # just do one row for simple case
 
-			# print(adj[x])
+		# print(adj[x])
 
-			# method to create rule #1
-			rule_1 = rule_1_at_least_one_color(x, index)
-			#print(rule_1)
+		# method to create rule #1
+		rule_1 = rule_1_at_least_one_color(x, index)
+		#print(rule_1)
 
-			# method to create rule #2
-			rules_2 = rule_2_adjacencies_no_share(x, adj, index)
-			# ^ a list of rules
+		# method to create rule #2
+		rules_2 = rule_2_adjacencies_no_share(x, adj, index)
+		# ^ a list of rules
 
 
-			print(rule_1)
-			for r in rules_2:
-				print(r)
+		print(rule_1)
+		for r in rules_2:
+			print(r)
 
 
 
