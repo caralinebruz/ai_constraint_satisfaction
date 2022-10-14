@@ -126,11 +126,61 @@ def build_adjacency(nodes_list, node_adjacency_mappings):
 	return adj, index, num, cols
 
 
+def get_alphaname(x,index):
+	# given an index of the adj matrix, return the alphaname
+	# ex. 3rd row of adj means return "NSW"
+	for k,v in index.items():
+		if v==x:
+			return k
+
+
+use_colors = [Color.RED, Color.GREEN, Color.BLUE]
+
+def rule_1_at_least_one_color(x, index):
+	rules = []
+	alphaname = get_alphaname(x, index)
+
+	for color in use_colors:
+		atom = str(alphaname) + '_' + str(color)
+		rules.append(atom)
+
+	rule_1 = ' '.join(rules)
+	return rule_1
+
+
+def rule_2_adjacencies_no_share(x, adj, index):
+
+	'''
+		!V_R !NSW_R
+		!V_R !SA_R
+		!V_G !NSW_G
+		!V_G !SA_G
+		!V_B !NSW_B
+		!V_B !SA_B
+	'''
+
+
+
+	pass
 
 
 def graph_constraints(adj,index,cols):
 
-	pass
+	# for row in adj
+	print("starting constraints logic...")
+
+	for x in range(len(cols)):
+		if x == index['V']: # just do one row for simple case
+
+			# print(adj[x])
+
+			# method to create rule #1
+			rule_1 = rule_1_at_least_one_color(x, index)
+			print(rule_1)
+
+			# method to create rule #2
+			rule_2 = rule_2_adjacencies_no_share(x, adj, index)
+			print(rule_2)
 
 
 
