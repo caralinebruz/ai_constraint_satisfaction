@@ -58,8 +58,11 @@ def parse_input(lines):
 
 			# 2. add the children of this to the node_adjacency_mappings
 			children = data[1].lstrip()
-			children = children.strip('[] ').split(', ')
+			children = children.replace(' ','')
+			children = children.strip('[] ').split(',')
 			print(children)
+
+
 
 			# https://pythonexamples.org/check-if-all-strings-in-python-list-are-not-empty
 			# true if all the strings are non-empty
@@ -141,9 +144,7 @@ def get_alphaname(x,index):
 			return str(k)
 
 
-use_colors = [Color.RED, Color.GREEN, Color.BLUE]
-
-def rule_1_at_least_one_color(x, index):
+def rule_1_at_least_one_color(x, index, use_colors):
 	''' Generates a single rule based on
 			assigning the node at least one color
 
@@ -164,7 +165,7 @@ def rule_1_at_least_one_color(x, index):
 	return rule_1
 
 
-def rule_2_adjacencies_no_share(x, adj, index):
+def rule_2_adjacencies_no_share(x, adj, index, use_colors):
 	''' Generates a list of rules based on
 			the adjacent nodes
 
@@ -202,30 +203,30 @@ def rule_2_adjacencies_no_share(x, adj, index):
 	return rules
 
 
-def graph_constraints(adj,index,cols):
+def graph_constraints(adj,index,cols,use_colors):
+	''' Generates all rules to be used for this graph
 
-	# for row in adj
+		** rule 1: each node gets at least one color
+		** rule 2: no adjacent nodes may share a color
+
+		RETURNS: 
+			A LIST OF ALL RULES 
+	'''
 	print("starting constraints logic...")
+	all_rules = []
 
 	for x in range(len(cols)):
-	# if x == index['V']: # just do one row for simple case
-
-		# print(adj[x])
 
 		# method to create rule #1
-		rule_1 = rule_1_at_least_one_color(x, index)
-		#print(rule_1)
+		rule_1 = rule_1_at_least_one_color(x, index, use_colors)
+		all_rules.append(rule_1)
 
 		# method to create rule #2
-		rules_2 = rule_2_adjacencies_no_share(x, adj, index)
-		# ^ a list of rules
+		rules_2 = rule_2_adjacencies_no_share(x, adj, index, use_colors)
+		for rule in rules_2:
+			all_rules.append(rule)
 
-
-		# write rules to outfile
-
-		print(rule_1)
-		for r in rules_2:
-			print(r)
+	return all_rules
 
 
 
@@ -257,6 +258,7 @@ if __name__ == '__main__':
 
 	# 0, get the colors to be used in this graph
 	use_colors = get_colors(num_colors)
+	print("using colors for map:")
 	print(use_colors)
 
 
@@ -268,7 +270,11 @@ if __name__ == '__main__':
 	adj, index, num, cols = build_adjacency(nodes_list, node_adjacency_mappings)
 
 	# Second, generate CNF clauses
-	clauses = graph_constraints(adj,index,cols)
+	clauses = graph_constraints(adj,index,cols,use_colors)
+
+
+	for clause in clauses:
+		print(clause)
 
 
 
