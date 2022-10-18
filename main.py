@@ -14,20 +14,27 @@ from pprint import pprint
 '''
 
 num_colors = ""
-
-
-class Color(Enum):
-	RED = 1
-	GREEN = 2
-	BLUE = 3
-	YELLOW = 4
-
-
-colors_temp = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW]
-
-
 nodes_list = []
 node_adjacency_mappings = {}
+
+ColorMap = {
+	1 : 'RED',
+	2 : 'GREEN',
+	3 : 'BLUE',
+	4 : 'YELLOW',
+}
+
+
+
+def get_colors(num_colors):
+
+	use_colors = []
+	for x in range(num_colors):
+
+		x = x+1
+		use_colors.append(ColorMap[x])
+
+	return use_colors
 
 
 
@@ -137,11 +144,17 @@ def get_alphaname(x,index):
 use_colors = [Color.RED, Color.GREEN, Color.BLUE]
 
 def rule_1_at_least_one_color(x, index):
-	''' Returns a single rule
+	''' Generates a single rule based on
+			assigning the node at least one color
+
+		** a node gets at least one color
+
+		RETURNS:
+			A SINGLE RULE
 	'''
-	print("creating rule 1 ...")
 	rules = []
 	alphaname = get_alphaname(x, index)
+	print("creating rule 1 for %s..." % alphaname)
 
 	for color in use_colors:
 		atom = alphaname + '_' + str(color)
@@ -152,58 +165,41 @@ def rule_1_at_least_one_color(x, index):
 
 
 def rule_2_adjacencies_no_share(x, adj, index):
-	'''
-	RETURNS A LIST OF RULES
-	'''
+	''' Generates a list of rules based on
+			the adjacent nodes
 
+		** no two adjacent nodes share a color
+
+		RETURNS:
+			A LIST OF RULES
+	'''
 	print("creating rule 2...")
-	'''
-		!V_R !NSW_R
-		!V_R !SA_R
-		!V_G !NSW_G
-		!V_G !SA_G
-		!V_B !NSW_B
-		!V_B !SA_B
-	'''
 	rules = []
 
 	primary_alphaname = get_alphaname(x, index)
 	row = adj[x]
 
 	for color in use_colors:
-
-
-		# first half of the rule
-		# !V_Color.RED
+		# 1. FIRST HALF of the rule
+		# !V_Color.RED etc..
 		left_rule = '!' + primary_alphaname + '_' + str(color)
 
-
-
-		# second half of the rule
+		# 2. SECOND HALF of the rule
 		# for any adjacency of the current row
 		for adjacent_index in range(len(row)):
 
 			adjacency = adj[x][adjacent_index]
 			if adjacency > 0:
 
-				# use this in rule creation
-				# look up the alphaname of said adjacney
+				# look up the alphaname of the adjacent node
 				adjacent_alphaname = get_alphaname(adjacent_index, index)
-
 				right_rule = '!' + adjacent_alphaname + '_' + str(color)
-				
 
+				# 3. PUT BOTH HALVES TOGETHER
 				rule = left_rule + ' ' + right_rule
-				#print(rule)
-
 				rules.append(rule)
 
-
-
 	return rules
-
-
-
 
 
 def graph_constraints(adj,index,cols):
@@ -224,6 +220,8 @@ def graph_constraints(adj,index,cols):
 		rules_2 = rule_2_adjacencies_no_share(x, adj, index)
 		# ^ a list of rules
 
+
+		# write rules to outfile
 
 		print(rule_1)
 		for r in rules_2:
@@ -252,10 +250,14 @@ if __name__ == '__main__':
 	if args.v:
 		v_verbose = True
 	if args.num_colors:
-		num_colors = args.num_colors
+		num_colors = int(args.num_colors[0])
 	if args.graph_file:
 		lines = args.graph_file.readlines()
 		infile = args.graph_file
+
+	# 0, get the colors to be used in this graph
+	use_colors = get_colors(num_colors)
+	print(use_colors)
 
 
 	# First, parse the input graph file
