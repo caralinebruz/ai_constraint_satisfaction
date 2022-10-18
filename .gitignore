@@ -9,6 +9,7 @@ __pycache__/
 
 # CARALINE ADDS
 .DS_Store
+data/out/*
 
 # Distribution / packaging
 .Python
