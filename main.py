@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys, getopt
 import argparse
 from enum import Enum
@@ -62,8 +63,6 @@ def parse_input(lines):
 			children = children.strip('[] ').split(',')
 			print(children)
 
-
-
 			# https://pythonexamples.org/check-if-all-strings-in-python-list-are-not-empty
 			# true if all the strings are non-empty
 			if all(children):
@@ -101,10 +100,10 @@ def build_adjacency(nodes_list, node_adjacency_mappings):
 
 	adj = [[0 for col in range(num)] for row in range(num)]
 
-	print("adjacency matrix before:")
-	for a in adj:
-		print("\t", end="")
-		print(a)
+	# print("adjacency matrix before:")
+	# for a in adj:
+	# 	print("\t", end="")
+	# 	print(a)
 
 	for from_node, to_list in node_adjacency_mappings.items():
 		index_num_row = index[from_node]
@@ -182,11 +181,10 @@ def rule_2_adjacencies_no_share(x, adj, index, use_colors):
 
 	for color in use_colors:
 		# 1. FIRST HALF of the rule
-		# !V_Color.RED etc..
 		left_rule = '!' + primary_alphaname + '_' + str(color)
 
 		# 2. SECOND HALF of the rule
-		# for any adjacency of the current row
+		# for any adjacency
 		for adjacent_index in range(len(row)):
 
 			adjacency = adj[x][adjacent_index]
@@ -202,6 +200,22 @@ def rule_2_adjacencies_no_share(x, adj, index, use_colors):
 
 	return rules
 
+
+def write_constraints(rules, infilename):
+	''' Writes CNF clauses to data/out directory
+	'''
+	infile = os.path.basename(str(infilename.name))
+	curr_dir = os.getcwd()
+	out_file = curr_dir + '/data/out/cnf_' + infile + '_out'
+
+	print("writing to file %s" % out_file)
+
+	with open(out_file, "w") as f:
+		for rule in rules:
+			f.write(rule)
+			f.write("\n")
+
+	return out_file
 
 def graph_constraints(adj,index,cols,use_colors):
 	''' Generates all rules to be used for this graph
@@ -271,18 +285,11 @@ if __name__ == '__main__':
 
 	# Second, generate CNF clauses
 	clauses = graph_constraints(adj,index,cols,use_colors)
+	out_filename = write_constraints(clauses, infile)
 
+	# for clause in clauses:
+	# 	print(clause)
 
-	for clause in clauses:
-		print(clause)
-
-
-
-
-
-	# tree = game_setup(lines)
-	# # Second, play the game
-	# game_play(tree, role)
 
 
 
