@@ -26,8 +26,6 @@ from solver import Solver
 
 v_verbose = False
 num_colors = ""
-nodes_list = []
-node_adjacency_mappings = {}
 
 ColorMap = {
 	1 : 'RED',

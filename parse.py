@@ -7,8 +7,6 @@ from enum import Enum
 import pprint
 from pprint import pprint
 
-# import colormap
-# from colormap import *
 
 nodes_list = []
 node_adjacency_mappings = {}
@@ -74,10 +72,6 @@ def build_adjacency(nodes_list, node_adjacency_mappings):
 
 	adj = [[0 for col in range(num)] for row in range(num)]
 
-	# print("adjacency matrix before:")
-	# for a in adj:
-	# 	print("\t", end="")
-	# 	print(a)
 
 	for from_node, to_list in node_adjacency_mappings.items():
 		index_num_row = index[from_node]
