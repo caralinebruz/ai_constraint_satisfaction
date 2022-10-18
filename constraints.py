@@ -13,6 +13,7 @@ class Constraints:
 		self.cols = cols
 		self.use_colors = use_colors
 		self.all_rules = []
+		self.atoms = set()
 
 	def get_alphaname(self,x):
 		# given an index of the adj matrix, return the alphaname
@@ -38,6 +39,10 @@ class Constraints:
 			atom = alphaname + '_' + str(color)
 			rules.append(atom)
 
+			# also add it to the set of atoms
+			if atom not in self.atoms:
+				self.atoms.add(atom)
+
 		rule_1 = ' '.join(rules)
 		return rule_1
 
@@ -59,7 +64,13 @@ class Constraints:
 
 		for color in self.use_colors:
 			# 1. FIRST HALF of the rule
-			left_rule = '!' + primary_alphaname + '_' + str(color)
+			left_atom = primary_alphaname + '_' + str(color)
+
+			if left_atom not in self.atoms:
+				self.atoms.add(left_atom)
+
+			left_rule = '!' + left_atom
+
 
 			# 2. SECOND HALF of the rule
 			# for any adjacency
@@ -70,7 +81,12 @@ class Constraints:
 
 					# look up the alphaname of the adjacent node
 					adjacent_alphaname = self.get_alphaname(adjacent_index)
-					right_rule = '!' + adjacent_alphaname + '_' + str(color)
+					right_atom = adjacent_alphaname + '_' + str(color)
+
+					if right_atom not in self.atoms:
+						self.atoms.add(right_atom)
+
+					right_rule = '!' + right_atom
 
 					# 3. PUT BOTH HALVES TOGETHER
 					rule = left_rule + ' ' + right_rule
@@ -96,7 +112,7 @@ class Constraints:
 			for rule in rules_2:
 				self.all_rules.append(rule)
 
-		return self.all_rules
+		return self.all_rules, self.atoms
 
 
 	def write_constraints(self, infilename):

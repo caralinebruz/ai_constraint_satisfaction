@@ -64,14 +64,14 @@ def map_coloring_via_dpll(infile, lines):
 	# Second, generate CNF clauses
 	#
 	C = Constraints(adj,index,cols,use_colors)
-	clauses = C.graph_constraints()
+	clauses, atoms = C.graph_constraints()
 	# also persist the output to disk
 	C.write_constraints(infile)
 
 	#
 	# Third, do DPLL solver
 	#
-	S = Solver(clauses)
+	S = Solver(clauses, atoms)
 	assignments = S.do_dpll()
 
 
