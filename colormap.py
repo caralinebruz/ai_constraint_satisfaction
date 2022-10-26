@@ -68,6 +68,9 @@ def map_coloring_via_dpll(infile, lines):
 	# also persist the output to disk
 	C.write_constraints(infile)
 
+	# convert to list rather than set for now
+	atoms = list(atoms)
+	atoms.sort()
 	#
 	# Third, do DPLL solver
 	#
