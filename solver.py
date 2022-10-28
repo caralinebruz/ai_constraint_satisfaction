@@ -267,7 +267,6 @@ class Solver:
 		for atom, assignment in V.items():
 			if not assignment:
 				V[atom] = False
-
 		return V
 
 
@@ -296,8 +295,7 @@ class Solver:
 
 			# EMPTY SENTENCE: RETURN FAIL
 			elif self.has_empty_sentence(S):
-				if (self.verbose):	
-					print("\tsome sentence is unsatisfiable under current assignments.")
+				
 				return None
 					
 			# EASY CASES: PURE LITERAL ELIMINATION AND FORCED ASSIGNMENT
@@ -317,7 +315,7 @@ class Solver:
 
 		V = self.assign(atom_hard_case, True, V)
 		if (self.verbose):
-			print("\tHard case: guess %s = %s" % (atom_hard_case, True))
+			print("\tHard case: guess %s=%s" % (atom_hard_case, True))
 
 		S1 = S
 		S1 = self.propagate_assignment(atom_hard_case, 'hard_case', S1, V)
@@ -332,7 +330,7 @@ class Solver:
 
 			V_guess_false = self.assign(atom_hard_case, False, V)
 			if (self.verbose):
-				print("\tContradiction: backtrack guess %s = %s" % (atom_hard_case, False))
+				print("\tContradiction: backtrack guess %s=%s" % (atom_hard_case, False))
 
 			S1 = self.propagate_assignment(atom_hard_case, 'retry', S, V_guess_false)
 			V_guess_false = self.dpll(S1,V_guess_false)
@@ -350,20 +348,20 @@ class Solver:
 
 				V_backtracked = self.assign(prev_atom, next_guess, V_backtrack_1)
 				if (self.verbose):
-					print("\tContradiction: backtrack again guess %s = %s" % (prev_atom, next_guess))
+					print("\tContradiction: backtrack again guess %s=%s" % (prev_atom, next_guess))
 
 				S1 = self.propagate_assignment(prev_atom, 'backtrack_retry', S_backtrack_1, V_backtracked)
 				V_backtracked = self.dpll(S1,V_backtracked)
 
 				if not V_backtracked:
 					print("NO VALID ASSIGNMENT")
-					return False
+					exit(1)
 
 			return self.dpll(S1,V_backtracked)
 
 		else:
-			if (self.verbose):
-				print("\tSuccess!")
+			# if (self.verbose):
+			# 	print("\tSuccess!")
 			return V_guess_true
 
 

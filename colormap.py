@@ -36,7 +36,8 @@ ColorMap = {
 
 
 def get_colors(num_colors):
-	# Returns the list of colors to be used
+	'''Returns a list of colors to be used
+	'''
 	use_colors = []
 	for x in range(num_colors):
 
@@ -46,39 +47,65 @@ def get_colors(num_colors):
 	return use_colors
 
 
+def convert_back(atoms,assignments):
+	'''Converts the assignments back to a readable solution
+	'''
+	solution = {}
+
+	for atom, assignment in assignments.items():
+		if not assignment:
+			continue
+
+		true_thing = atom.split('_')
+		name = true_thing[0]
+		color = true_thing[1]
+
+		if name not in solution.keys():
+			solution[name] = color
+
+	return solution
+
+
 def map_coloring_via_dpll(infile, lines):
+	'''Main program execution
+	'''
 
-	#... get the names of the colors to be used
+	# Get the names of the colors to be used
 	use_colors = get_colors(num_colors)
-	# print("using colors for map:")
-	# print(use_colors)
 
 	#
-	# First, parse the input graph file
+	# FIRST, parse the input graph file
 	#
-	# graph = parseInput(filename)
 	nodes_list, node_adjacency_mappings = parse.parse_input(lines)
 	adj, index, num, cols = parse.build_adjacency(nodes_list, node_adjacency_mappings)
 
 	#
-	# Second, generate CNF clauses
+	# SECOND, generate CNF clauses
 	#
 	C = Constraints(adj,index,cols,use_colors)
 	clauses, atoms = C.graph_constraints()
-	# also persist the output to disk
 	C.write_constraints(infile)
 
 	# convert to list rather than set for now
 	atoms = list(atoms)
 	atoms.sort()
+
 	#
-	# Third, do DPLL solver
+	# THIRD, do DPLL solver
 	#
 	S = Solver(clauses, atoms, v_verbose)
 	assignments = S.do_dpll()
 
-	print(assignments)
+	#
+	# FOURTH, convert assignments back to something meaningful
+	#
+	solution = convert_back(atoms, assignments)
 
+	#
+	# PRINT SOLUTION
+	#
+	for vertex, color in solution.items():
+		print("%s = %s" % (vertex,color))
 
 
 if __name__ == '__main__':
