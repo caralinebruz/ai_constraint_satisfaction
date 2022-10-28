@@ -391,7 +391,8 @@ class Solver:
 				# no easy cases, break out of this.
 				break
 	
-			if x==20:
+			if x==50:
+				print("breaking at x=50")
 				return
 				exit()
 
@@ -461,7 +462,7 @@ class Solver:
 				y=0
 				while not V_backtracked:
 					print("backtrack didnt work loop: %s, do i do it again?" % y)
-					if y==20:
+					if y==50:
 						exit(1)
 
 					# # actually need to backtrack one more, and then try the opposite assignment
