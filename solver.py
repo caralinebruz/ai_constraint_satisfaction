@@ -11,7 +11,7 @@ class Solver:
 		self.unassigned = set(atoms)
 		self.order_assigned = []
 		self.assignments = {}
-		self.past_steps = []
+		self.history = []  # will contain V, S
 
 
 	def is_finished(self, S):
@@ -22,24 +22,44 @@ class Solver:
 		return False
 
 
-	def mark_atom_assigned(self, atom):
-		print("current unassigned: ")
-		print(self.unassigned)
+	# def mark_atom_assigned(self, atom):
+	# 	print("current unassigned: ")
+	# 	print(self.unassigned)
 
-		self.unassigned.remove(atom)
-		self.order_assigned.append(atom)
+	# 	self.unassigned.remove(atom)
+	# 	self.order_assigned.append(atom)
 
-		print("current unassigned: ")
-		print(self.unassigned)
+	# 	print("current unassigned: ")
+	# 	print(self.unassigned)
 
 
-	def propagate_assignment(self, assignment, S):
+
+	def _snapshot(self, assignment, type_of_assignment, S, V):
+		'''Saves the current assignment AND resolved propagated sentences
+		'''
+		atom = assignment.lstrip('!')
+		this_iteration = {
+							'S': S, 
+							'V': V,
+							'propagated_atom': atom,
+							'propagated_assignment': V[atom],
+							'type_of_assignment': type_of_assignment
+							}
+		self.history.append(this_iteration)
+
+
+	def propagate_assignment(self, assignment, type_of_assignment, S, V):
 		'''Propagates the assignment to the clauses
 
 		Assignment is in:
 			!T_RED 
 			T_RED
 		'''
+		print("snapshotting before propagating assignment ....")
+		self._snapshot(assignment, type_of_assignment, S, V)
+
+
+
 		print("\nPROPAGATING ASSIGNMENT: ")
 		new_clauses = []
 		# for clause in self.clauses:
@@ -119,14 +139,10 @@ class Solver:
 		
 		S1 = new_clauses
 		print("\nDONE PROPAGATING ASSIGNMENT\n\n")
+
+
+		
 		return S1
-
-		# print("new clauses:")
-		# for clause in self.clauses:
-		# 	print(clause)
-
-		# self.clauses = new_clauses
-		#return self.clauses
 
 
 
@@ -142,16 +158,15 @@ class Solver:
 			V[atom] = False
 			name = atom.lstrip('!')
 
-		self.mark_atom_assigned(name)
-
 		return V
 
 
-	def hard_case_assign(self, atom: str, assignment: bool):
+	def assign(self, atom: str, assignment: bool, V):
 		'''Assign an atom given a boolean
 		'''
-		self.assignments[atom] = assignment
-		self.mark_atom_assigned(atom)
+		V[atom] = assignment
+		# self.mark_atom_assigned(atom)
+		return V
 
 
 	def singleton(self, S):
@@ -222,7 +237,7 @@ class Solver:
 		'''
 		for clause in S:
 			if clause is None:
-				print("Found the empty sentence, need to backtrack.")
+				print("Found the empty sentence!")
 				return True
 		return False
 
@@ -243,27 +258,68 @@ class Solver:
 		return False
 
 
-	def pick_hard_case_atom(self, unassigned):
+	def pick_hard_case_atom(self, V, index):
 		'''Picks the smallest lexicographic atom in unbound
 		'''
 		print("picking a hard case")
 
-		unassigned_atoms = sorted(list(self.unassigned))
+		unassigned_atoms = []
+		for atom, assignment in V.items():
+			print("%s:%s" % (atom, assignment))
+			if assignment is not None:
+				continue
+			else:
+				unassigned_atoms.append(atom)
 
-		guess = unassigned_atoms[0]
+
+		print(unassigned_atoms)
+		unassigned_atoms = sorted(unassigned_atoms)
+
+		guess = unassigned_atoms[index]
 		print("guess %s = True" % guess)
 
 		return guess
 
+	def backtrack(self):
+		'''Backtracks to most recent hard case
+
+		** Method of retaining "snapshots" of past sates used
+			for backtracking is inspired by https://github.com/dizys/nyu-ai-lab-2/blob/main/solver
+		'''
+		if len(self.history)==0:
+			print("weird case, handle later")
+
+		while True:
+			if len(self.history) == 0:
+				print("reached the end of the line, handle this case.")
+				return False
+
+			past_step = self.history[-1]
+			past_step_type = past_step['type_of_assignment']
+
+			if past_step_type == 'easy_case':
+				print("popping easy case..")
+				print("\t backtrack assignment of %s = %s" % (past_step['propagated_atom'],past_step['propagated_assignment']))
+				self.history.pop()
+			else:
+				print("returning last hard case guess S and V (and the atom that was tried)...")
+				S = past_step['S']
+				V = past_step['V']
+				last_guessed_atom = past_step['propagated_atom']
+				last_guessed_atom_bool = past_step['propagated_assignment']
 
 
+				return last_guessed_atom, last_guessed_atom_bool, S,V
+
+			print("while True still going...")
+			# return False
 
 
 	def do_dpll(self):
 
 		# initially, set all atoms to False
 		for a in self.atoms:
-			self.assignments[a] = False
+			self.assignments[a] = None
 		print(self.assignments)
 
 		# unassigned = self.atoms
@@ -302,21 +358,18 @@ class Solver:
 
 			elif self.has_empty_sentence(S):
 				# some clause is unsatisfiable under current assignments
-				print("some sentence is unsatisfiable under current assignments:")
-				print("will need to set up backtracking...")
-				print(V)
-				print(S)
+				print("some sentence is unsatisfiable under current assignments.. returning FAIL")
 
-				print("the order of which i assigned:")
-				print(self.order_assigned)
+				prev_snapshot = self.history[-1]
+				print("failed on assignment:")
+				print(prev_snapshot['propagated_atom'])
+				print(prev_snapshot['propagated_assignment'])
 
-				# remove assigned atom from assigned and add it back to unassiend
-				last_assigned_atom = self.order_assigned.pop()
-				self.unassigned.add(last_assigned_atom)
+				# take a look at the failed assignment, and try the other way
 
-				atoms_assignment = V[last_assigned_atom]
-				print("assigned %s = %s and FAILED." % (last_assigned_atom, atoms_assignment))
-				#exit(1)
+
+
+				
 				return False
 					
 
@@ -326,8 +379,9 @@ class Solver:
 				# obvious assign
 				V = self.obvious_assign(atom_to_assign, V)
 				# propagate
+				print("\nEASY CASE: assign %s" % atom_to_assign)
 				print("propagating assignment: %s" % atom_to_assign)
-				S = self.propagate_assignment(atom_to_assign, S)
+				S = self.propagate_assignment(atom_to_assign, 'easy_case', S, V)
 				
 
 			else:
@@ -341,40 +395,64 @@ class Solver:
 			x+=1
 
 
-		'''
-		%  
-		HARD CASE: PICK SOME ATOM AND TRY EACH ASSIGNMENT IN TURN 
-			pick atom A such that V[A] == UNBOUND;   %  Try one assignment 
-			V[A] = TRUE;
-			S1 = copy(S);
-			S1 = propagate(A, S1, V);
-			VNEW = dp1(ATOMS,S1,V);
-			if (VNEW != NIL) then return(VNEW); % Found a satisfying valuation
-
-		%  If V[A] = TRUE didn't work, try V[A] = FALSE;
-			V[A] = FALSE;
-			S1 = propagate(A, S, V);
-			return(dp1(ATOMS,S1,V)); % Either found a satisfying valuation or backtrack
-
-} end dp1
-		'''
-
 		# otherwise go to hard case
 		# HARD CASE: PICK SOME ATOM AND TRY EACH ASSIGNMENT IN TURN
 
 		# pick the smallest lexicographic atom in unbound
-		atom_hard_case = self.pick_hard_case_atom(self.unassigned)
+		atom_hard_case = self.pick_hard_case_atom(V,0)
 
-		self.hard_case_assign(atom_hard_case, True)
+		print("\nHARD CASE: assign %s = %s" % (atom_hard_case, True))
+		V = self.assign(atom_hard_case, True, V)
 
 		S1 = S
-		S1 = self.propagate_assignment(atom_hard_case, S1)
+		S1 = self.propagate_assignment(atom_hard_case, 'hard_case', S1, V)
 
+		# call DPLL again
 		V_NEW = self.dpll(S1,V)
+
+		
+
+		# if it returned with the empty sentence, try hard case = False
 		if not V_NEW:
 
-			print("you failed and need to backtrack")
+			print("you failed with hard case=True guess, try assign False instead...")
+
+			print("\nHARD CASE: assign %s = %s" % (atom_hard_case, False))
+			V = self.assign(atom_hard_case, False, V)
+			S1 = self.propagate_assignment(atom_hard_case, 'hard_case', S, V)
+
+
+			V_NEW_2 = self.dpll(S1,V)
+			if not V_NEW_2:
+
+				print("now you actually need to backtrack.")
+
+
+
+				# prev_snapshot = self.history[-1]
+				# print(prev_snapshot['propagated_assignment'])
+
+
+				# prev_prev_snapshot = self.history[-2]
+				# print(prev_prev_snapshot['propagated_assignment'])
+
+
+				# prev_prev_prev_snapshot = self.history[-3]
+				# print(prev_prev_prev_snapshot['propagated_assignment'])
+
+
+				guessed_atom, guessed_assignment, S_backtrack, V_backtrack = self.backtrack()
+				print("backtracked to state when guessed %s = %s" % (guessed_atom, guessed_assignment))
+
+
+
+			# # if that still doesnt work, need to backtrack previous atom
+			# return dpll(S1,V)
+				exit(1)
+
+
 		else:
+			print("found a satisfying condition, now what?")
 			return V_NEW
 
 
