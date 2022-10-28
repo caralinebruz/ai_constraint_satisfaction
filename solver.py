@@ -66,7 +66,6 @@ class Solver:
 
 					new_clause = s_sentence - s_assignment
 					new_clause = ' '.join(list(new_clause))
-					# print("sentence:%s, assignment:%s new_clause:%s" % (s_sentence, s_assignment, new_clause))
 
 				else:
 					# print("left with the empty sentence, cannot resolve")
@@ -84,7 +83,6 @@ class Solver:
 
 					new_clause = s_sentence - s_assignment
 					new_clause = ' '.join(list(new_clause))
-					# print("sentence:%s, assignment:%s new_clause:%s" % (s_sentence, s_assignment, new_clause))
 
 				else:
 					# print("left with the empty sentence, cannot resolve")
@@ -214,8 +212,6 @@ class Solver:
 	def pick_hard_case_atom(self, V, index):
 		'''Picks the smallest lexicographic atom in unbound
 		'''
-		print("picking a hard case")
-
 		unassigned_atoms = []
 		for atom, assignment in V.items():
 
@@ -276,10 +272,11 @@ class Solver:
 
 	def do_dpll(self):
 		'''Handler for DPLL Resolution
+
+			RETURNS: Valid atom assignments, or FAIL
 		'''
 		for a in self.atoms:
 			self.assignments[a] = None
-		print(self.assignments)
 
 		final_assignments = self.dpll(self.clauses, self.assignments)
 
@@ -289,8 +286,6 @@ class Solver:
 	def dpll(self, S, V):
 		'''Main recursion
 		'''
-
-		# Loop as long as there are easy cases
 		while True:
 
 			# SUCCESS: RETURN FINISH
@@ -316,35 +311,29 @@ class Solver:
 
 
 		# HARD CASE: PICK ATOM AND TRY
+		# GUESS = True
 		atom_hard_case = self.pick_hard_case_atom(V,0)
-
-		# print("\n1.HARD CASE: assign %s = %s" % (atom_hard_case, True))
 		V = self.assign(atom_hard_case, True, V)
 
 		S1 = S
 		S1 = self.propagate_assignment(atom_hard_case, 'hard_case', S1, V)
-
 		V_guess_true = self.dpll(S1,V)
 
-		# if it returned with the empty sentence, try hard case = False
+		# HARD CASE: GUESS FAILED
+		# RETRY GUESS = False
 		if not V_guess_true:
 
-			print("2.you failed with last picking %s = %s, try assign False instead..." % (atom_hard_case, True))
-
-
+			print("\nRETRY HARD CASE: assign %s = %s" % (atom_hard_case, False))
 			prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack()
 
-			print("\nRETRY HARD CASE: assign %s = %s" % (atom_hard_case, False))
 			V_guess_false = self.assign(atom_hard_case, False, V)
 			S1 = self.propagate_assignment(atom_hard_case, 'retry', S, V_guess_false)
-
-
 			V_guess_false = self.dpll(S1,V_guess_false)
 
+
+			# FAILED GUESS = False
+			# BACKTRACK
 			if not V_guess_false:
-				print("now you actually need to backtrack.")
-
-
 
 				prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack()
 				print("backtracked to state when guessed %s = %s" % (prev_atom, prev_assignment))
@@ -363,7 +352,6 @@ class Solver:
 				if not V_backtracked:
 					print("No valid assignments.")
 					return False
-
 
 			# # if that still doesnt work, need to backtrack previous atom
 			return self.dpll(S1,V_backtracked)
