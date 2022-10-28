@@ -5,13 +5,14 @@ from sys import exit
 class Solver:
 	'''Class to run the DPLL solver for assignments
 	'''
-	def __init__(self,clauses,atoms):
+	def __init__(self,clauses,atoms,v_verbose=False):
 		self.clauses = clauses
 		self.atoms = atoms
 		self.unassigned = set(atoms)
 		self.order_assigned = []
 		self.assignments = {}
 		self.history = []
+		self.verbose = v_verbose
 
 
 	def is_finished(self, S):
@@ -111,7 +112,7 @@ class Solver:
 			assignment = False
 			V[stripped_atom_name] = assignment
 
-		print("E ASSIGN %s = %s" % (stripped_atom_name, assignment))
+		# print("E ASSIGN %s = %s" % (stripped_atom_name, assignment))
 		return V
 
 
@@ -119,8 +120,6 @@ class Solver:
 		'''Assign an atom given a boolean
 		'''
 		V[atom] = assignment
-
-		print("H ASSIGN %s = %s" % (atom, assignment))
 		return V
 
 
@@ -132,12 +131,7 @@ class Solver:
 			sentence = clause.split(' ')
 			if len(sentence) == 1:
 				singleton = sentence[0]
-				print("found a singleton: %s" % singleton)
-
 				return singleton
-
-			if len(sentence) == 0:
-				print("err nothing in the sentence")
 
 		# otherwise length of sentence > 1 and this case returns False
 		return False
@@ -189,21 +183,32 @@ class Solver:
 		'''
 		for clause in S:
 			if clause is None:
-				print("Found the empty sentence!")
+				# print("Found the empty sentence!")
 				return True
 		return False
 
 
-	def easy_case(self, S):
+	def easy_case(self, S, logging=True):
 		'''If there is a singleton, return it
 			If there is a pure literal, return it
 		''' 
 		singleton = self.singleton(S)
 		if singleton:
+			if (self.verbose and logging):
+				print("Easy case: singleton %s" % singleton)
 			return singleton
 
 		pure_literal = self.pure_literal(S)
 		if pure_literal:
+
+			if (self.verbose and logging):
+				name = pure_literal.lstrip('!')
+				if name == pure_literal:
+					assignment = True
+				else:
+					assignment = False
+				print("Easy case: pure literal %s=%s" % (name, assignment))
+
 			return pure_literal
 
 		return False
@@ -221,9 +226,7 @@ class Solver:
 				unassigned_atoms.append(atom)
 
 		unassigned_atoms = sorted(unassigned_atoms)
-
 		guess = unassigned_atoms[index]
-		print("guess %s = True" % guess)
 
 		return guess
 
@@ -279,7 +282,6 @@ class Solver:
 			self.assignments[a] = None
 
 		final_assignments = self.dpll(self.clauses, self.assignments)
-
 		return final_assignments
 
 
@@ -296,11 +298,12 @@ class Solver:
 
 			# EMPTY SENTENCE: RETURN FAIL
 			elif self.has_empty_sentence(S):
-				print("some sentence is unsatisfiable under current assignments..")
+				if (self.verbose):	
+					print("some sentence is unsatisfiable under current assignments.")
 				return None
 					
 			# EASY CASES: PURE LITERAL ELIMINATION AND FORCED ASSIGNMENT
-			elif self.easy_case(S):
+			elif self.easy_case(S,logging=False):
 
 				atom_to_assign = self.easy_case(S)
 				V = self.obvious_assign(atom_to_assign, V)
@@ -309,55 +312,60 @@ class Solver:
 			else:
 				break
 
-
+		#
 		# HARD CASE: PICK ATOM AND TRY
-		# GUESS = True
+		#
 		atom_hard_case = self.pick_hard_case_atom(V,0)
+
 		V = self.assign(atom_hard_case, True, V)
+		if (self.verbose):
+			print("Hard case: guess %s = %s" % (atom_hard_case, True))
 
 		S1 = S
 		S1 = self.propagate_assignment(atom_hard_case, 'hard_case', S1, V)
 		V_guess_true = self.dpll(S1,V)
 
+		#
 		# HARD CASE: GUESS FAILED
-		# RETRY GUESS = False
+		#
 		if not V_guess_true:
 
-			print("\nRETRY HARD CASE: assign %s = %s" % (atom_hard_case, False))
 			prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack()
 
 			V_guess_false = self.assign(atom_hard_case, False, V)
+			if (self.verbose):
+				print("Contradiction: backtrack guess %s = %s" % (atom_hard_case, False))
+
 			S1 = self.propagate_assignment(atom_hard_case, 'retry', S, V_guess_false)
 			V_guess_false = self.dpll(S1,V_guess_false)
 
-
-			# FAILED GUESS = False
+			#
 			# BACKTRACK
+			#
 			if not V_guess_false:
 
 				prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack()
-				print("backtracked to state when guessed %s = %s" % (prev_atom, prev_assignment))
 
 				next_guess = False
 				if not prev_assignment:
 					next_guess = True
 
-				print("\nBACKTRACKED CASE: assign %s = %s" % (prev_atom, next_guess))
-
 				V_backtracked = self.assign(prev_atom, next_guess, V_backtrack_1)
-				S1 = self.propagate_assignment(prev_atom, 'backtrack_retry', S_backtrack_1, V_backtracked)
+				if (self.verbose):
+					print("Contradiction: backtrack again guess %s = %s" % (prev_atom, next_guess))
 
+				S1 = self.propagate_assignment(prev_atom, 'backtrack_retry', S_backtrack_1, V_backtracked)
 				V_backtracked = self.dpll(S1,V_backtracked)
 
 				if not V_backtracked:
-					print("No valid assignments.")
+					print("NO VALID ASSIGNMENT")
 					return False
 
-			# # if that still doesnt work, need to backtrack previous atom
 			return self.dpll(S1,V_backtracked)
 
 		else:
-			print("found a satisfying condition, now what?")
+			if (self.verbose):
+				print("Success!")
 			return V_guess_true
 
 

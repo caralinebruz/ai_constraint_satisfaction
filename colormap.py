@@ -74,7 +74,7 @@ def map_coloring_via_dpll(infile, lines):
 	#
 	# Third, do DPLL solver
 	#
-	S = Solver(clauses, atoms)
+	S = Solver(clauses, atoms, v_verbose)
 	assignments = S.do_dpll()
 
 	print(assignments)
