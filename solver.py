@@ -22,17 +22,6 @@ class Solver:
 		return False
 
 
-	# def mark_atom_assigned(self, atom):
-	# 	print("current unassigned: ")
-	# 	print(self.unassigned)
-
-	# 	self.unassigned.remove(atom)
-	# 	self.order_assigned.append(atom)
-
-	# 	print("current unassigned: ")
-	# 	print(self.unassigned)
-
-
 
 	def _snapshot(self, assignment, type_of_assignment, S, V):
 		'''Saves the current assignment AND resolved propagated sentences
@@ -59,13 +48,12 @@ class Solver:
 		self._snapshot(assignment, type_of_assignment, S, V)
 
 
-
-		print("\nPROPAGATING ASSIGNMENT: ")
+		print("\nPROPAGATING ASSIGNMENT: %s ; %s" % (assignment, type_of_assignment))
 		new_clauses = []
 		# for clause in self.clauses:
 		for clause in S:
 
-			print("old clause: %s" % clause)
+			# print("old clause: %s" % clause)
 
 			# prepare to write new sentences
 			new_clause = []
@@ -76,14 +64,14 @@ class Solver:
 			# if assignment = !T_RED and CNF contains !T_RED
 			#		or if assignment = T_RED and CNF contains T_RED
 			if assignment in sentence:
-				print("1: Resolving entire line, satisfied: %s" % clause)
+				# print("1: Resolving entire line, satisfied: %s" % clause)
 				# mark it as resolved, don't add it to new set of clauses
 				continue 
 
 			# if assignment = !T_RED and CNF contains T_RED
 			elif assignment.lstrip('!') in sentence:
 				# shorten the sentence if len > 1
-				print("2")
+				# print("2")
 				if len(sentence) > 1:
 					# shorten it
 					s_sentence = set(sentence)
@@ -106,7 +94,7 @@ class Solver:
 			# if assignment = T_RED and CNF contains !T_RED
 			elif '!' + assignment in sentence:
 				# shorten the sentence if len > 1
-				print("3")
+				# print("3")
 				if len(sentence) > 1:
 					# shorten it
 					s_sentence = set(sentence)
@@ -149,14 +137,23 @@ class Solver:
 	def obvious_assign(self, atom, V):
 		'''Assign atom as it appears in the sentence
 		'''
-		name = atom
+		assignment = True
+
+		# for k,v in V.items():
+		# 	print("%s:%s" % (k,v))
+
+		stripped_atom_name = atom.lstrip('!')
 
 		if atom in self.atoms:
-			V[atom] = True
+			V[atom] = assignment
 
-		elif atom.lstrip('!') in self.atoms:
-			V[atom] = False
-			name = atom.lstrip('!')
+		elif stripped_atom_name in self.atoms:
+
+			assignment = False
+			V[stripped_atom_name] = assignment
+
+
+		print("E ASSIGN %s = %s" % (stripped_atom_name, assignment))
 
 		return V
 
@@ -164,6 +161,7 @@ class Solver:
 	def assign(self, atom: str, assignment: bool, V):
 		'''Assign an atom given a boolean
 		'''
+		print("H ASSIGN %s = %s" % (atom, assignment))
 		V[atom] = assignment
 		# self.mark_atom_assigned(atom)
 		return V
@@ -308,11 +306,31 @@ class Solver:
 				last_guessed_atom = past_step['propagated_atom']
 				last_guessed_atom_bool = past_step['propagated_assignment']
 
-
 				return last_guessed_atom, last_guessed_atom_bool, S,V
 
 			print("while True still going...")
-			# return False
+
+
+	def backtrack_once(self):
+		'''Only back up one more atom assignment (since full backtrack)
+		'''
+		if len(self.history)==0:
+			print("weird case, handle later")
+
+		# past_step = self.history[-1]
+		past_step = self.history.pop()
+
+		S = past_step['S']
+		V = past_step['V']
+		last_atom = past_step['propagated_atom']
+		last_atom_bool = past_step['propagated_assignment']
+
+
+		# for atom, assignment in V.items():
+		# 	print("%s:%s" % (atom, assignment))
+
+		return last_atom, last_atom_bool, S,V
+
 
 
 	def do_dpll(self):
@@ -323,7 +341,9 @@ class Solver:
 		print(self.assignments)
 
 		# unassigned = self.atoms
-		self.dpll(self.clauses, self.assignments)
+		final_assignments = self.dpll(self.clauses, self.assignments)
+
+		return final_assignments
 
 
 
@@ -342,15 +362,8 @@ class Solver:
 				# assign any unbound atoms
 				# return the assignments (TRANSFORMED)
 				print("success, assign unbound, convert back, return colors")
-				# for a in self.atoms:
-				# 	if self.assignments[a] == None:
 
-				# 		# change it to true to check my work later.
-				# 		# in the lab doc he says "For default assignments, use False"
-				# 		# default assignments are set to False
-				# 		print("assigning unbound atom: %s" % a)
-				# 		self.assignments[a] = False
-
+				print(V)
 				return V
 				# FINISH STEPS
 				# transform assignments
@@ -360,17 +373,7 @@ class Solver:
 				# some clause is unsatisfiable under current assignments
 				print("some sentence is unsatisfiable under current assignments.. returning FAIL")
 
-				prev_snapshot = self.history[-1]
-				print("failed on assignment:")
-				print(prev_snapshot['propagated_atom'])
-				print(prev_snapshot['propagated_assignment'])
-
-				# take a look at the failed assignment, and try the other way
-
-
-
-				
-				return False
+				return None
 					
 
 			# EASY CASES: PURE LITERAL ELIMINATION AND FORCED ASSIGNMENT
@@ -395,65 +398,108 @@ class Solver:
 			x+=1
 
 
+
 		# otherwise go to hard case
 		# HARD CASE: PICK SOME ATOM AND TRY EACH ASSIGNMENT IN TURN
 
 		# pick the smallest lexicographic atom in unbound
 		atom_hard_case = self.pick_hard_case_atom(V,0)
 
-		print("\nHARD CASE: assign %s = %s" % (atom_hard_case, True))
+		print("\n1.HARD CASE: assign %s = %s" % (atom_hard_case, True))
 		V = self.assign(atom_hard_case, True, V)
 
 		S1 = S
 		S1 = self.propagate_assignment(atom_hard_case, 'hard_case', S1, V)
 
-		# call DPLL again
-		V_NEW = self.dpll(S1,V)
-
-		
+		# this may return None or False
+		V_guess_true = self.dpll(S1,V)
 
 		# if it returned with the empty sentence, try hard case = False
-		if not V_NEW:
+		if not V_guess_true:
 
-			print("you failed with hard case=True guess, try assign False instead...")
+			print("2.you failed with last picking %s = %s, try assign False instead..." % (atom_hard_case, True))
 
-			print("\nHARD CASE: assign %s = %s" % (atom_hard_case, False))
-			V = self.assign(atom_hard_case, False, V)
-			S1 = self.propagate_assignment(atom_hard_case, 'hard_case', S, V)
+			guessed_atom, guessed_assignment, S_backtrack, V_backtrack = self.backtrack()
+			print("2. backtracked to state when guessed %s = %s" % (guessed_atom, guessed_assignment))
+			prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack_once()
+
+			print("\n2. HARD CASE: assign %s = %s" % (atom_hard_case, False))
+			V_guess_false = self.assign(atom_hard_case, False, V)
+			S1 = self.propagate_assignment(atom_hard_case, 'retry', S, V_guess_false)
 
 
-			V_NEW_2 = self.dpll(S1,V)
-			if not V_NEW_2:
+			# this may return None or False
+			V_guess_false = self.dpll(S1,V_guess_false)
 
+			if not V_guess_false:
 				print("now you actually need to backtrack.")
-
-
-
-				# prev_snapshot = self.history[-1]
-				# print(prev_snapshot['propagated_assignment'])
-
-
-				# prev_prev_snapshot = self.history[-2]
-				# print(prev_prev_snapshot['propagated_assignment'])
-
-
-				# prev_prev_prev_snapshot = self.history[-3]
-				# print(prev_prev_prev_snapshot['propagated_assignment'])
 
 
 				guessed_atom, guessed_assignment, S_backtrack, V_backtrack = self.backtrack()
 				print("backtracked to state when guessed %s = %s" % (guessed_atom, guessed_assignment))
 
+				# actually need to backtrack one more, and then try the opposite assignment
+				prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack_once()
+
+				print("now try the other assignemnt")
+				next_guess = False
+				if not guessed_assignment:
+					next_guess = True
+
+				print("\nBACKTRACKED CASE: assign %s = %s" % (prev_atom, next_guess))
+
+				V_backtracked = self.assign(prev_atom, next_guess, V_backtrack_1)
+				S1 = self.propagate_assignment(prev_atom, 'backtrack_retry', S_backtrack_1, V_backtracked)
+
+				# this may return none or false
+				V_backtracked = self.dpll(S1,V_backtracked)
+
+				if not V_backtracked:
+					print("backtrack didnt work, do i do it again?")
+
+
+				y=0
+				while not V_backtracked:
+					print("backtrack didnt work loop: %s, do i do it again?" % y)
+					if y==20:
+						exit(1)
+
+					# # actually need to backtrack one more, and then try the opposite assignment
+					# prev_atom, prev_assignment, S_backtrack_2, V_backtrack_2 = self.backtrack_twice()
+
+					guessed_atom, guessed_assignment, S_backtrack, V_backtrack = self.backtrack()
+					print("2::backtracked to state when guessed %s = %s" % (guessed_atom, guessed_assignment))
+					# actually need to backtrack one more, and then try the opposite assignment
+					prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack_once()
+
+					print("now try the other assignemnt")
+					next_guess = False
+					if not guessed_assignment:
+						next_guess = True
+
+					print("\nBACKTRACKED TWICE CASE: assign %s = %s" % (prev_atom, next_guess))
+					V_backtracked = self.assign(prev_atom, next_guess, V_backtrack_1)
+					S1 = self.propagate_assignment(prev_atom, 'backtrack_retry', S_backtrack_1, V_backtracked)
+
+					# this may return none or false
+					V_backtracked = self.dpll(S1,V_backtracked)
+					y+=1
+
+
+					print("assigned order:")
+					for i in self.history:
+						print("%s = %s (%s)" % (i['propagated_atom'], i['propagated_assignment'], i['type_of_assignment']))
+
 
 
 			# # if that still doesnt work, need to backtrack previous atom
-			# return dpll(S1,V)
-				exit(1)
+			return self.dpll(S1,V_backtracked)
+				# exit(1)
 
 
 		else:
 			print("found a satisfying condition, now what?")
-			return V_NEW
+			return V_guess_true
 
 
 
