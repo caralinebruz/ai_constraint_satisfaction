@@ -324,11 +324,10 @@ class Solver:
 
 	def dpll(self, S, V):
 
-		x=0
 		# Loop as long as there are easy cases to cherry pick
 		while True:
 
-			print("x=%s" % x)
+			# print("x=%s" % x)
 
 			# BASE OF THE RECURSION: SUCCESS OR FAILURE
 			if self.is_finished(S):
@@ -363,13 +362,6 @@ class Solver:
 			else:
 				# no easy cases, break out of this.
 				break
-	
-			if x==50:
-				print("breaking at x=50")
-				return
-				exit()
-
-			x+=1
 
 
 		# HARD CASE: PICK SOME ATOM AND TRY EACH ASSIGNMENT IN TURN
@@ -424,37 +416,6 @@ class Solver:
 
 				# this may return none or false
 				V_backtracked = self.dpll(S1,V_backtracked)
-
-
-				# y=0
-				# while not V_backtracked:
-				# 	print("backtrack didnt work loop: %s, do i do it again?" % y)
-				# 	if y==50:
-				# 		exit(1)
-
-
-				# 	prev_atom, prev_assignment, S_backtrack_1, V_backtrack_1 = self.backtrack()
-
-				# 	print("2::backtracked to state when guessed %s = %s" % (guessed_atom, guessed_assignment))
-
-				# 	print("now try the other assignemnt")
-				# 	next_guess = False
-				# 	if not guessed_assignment:
-				# 		next_guess = True
-
-				# 	print("\nBACKTRACKED TWICE CASE: assign %s = %s" % (prev_atom, next_guess))
-				# 	V_backtracked = self.assign(prev_atom, next_guess, V_backtrack_1)
-				# 	S1 = self.propagate_assignment(prev_atom, 'backtrack_retry_ii', S_backtrack_1, V_backtracked)
-
-				# 	# this may return none or false
-				# 	V_backtracked = self.dpll(S1,V_backtracked)
-				# 	y+=1
-
-
-				# 	print("assigned order:")
-				# 	for i in self.history:
-				# 		print("%s = %s (%s)" % (i['propagated_atom'], i['propagated_assignment'], i['type_of_assignment']))
-
 
 
 			# # if that still doesnt work, need to backtrack previous atom
