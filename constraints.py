@@ -33,7 +33,7 @@ class Constraints:
 		'''
 		rules = []
 		alphaname = self.get_alphaname(x)
-		print("creating rule 1 for %s..." % alphaname)
+		# print("creating rule 1 for %s..." % alphaname)
 
 		for color in self.use_colors:
 			atom = alphaname + '_' + str(color)
@@ -56,7 +56,6 @@ class Constraints:
 			RETURNS:
 				A LIST OF RULES
 		'''
-		print("creating rule 2...")
 		rules = []
 
 		primary_alphaname = self.get_alphaname(x)
@@ -70,7 +69,6 @@ class Constraints:
 				self.atoms.add(left_atom)
 
 			left_rule = '!' + left_atom
-
 
 			# 2. SECOND HALF of the rule
 			# for any adjacency
@@ -100,7 +98,7 @@ class Constraints:
 		RETURNS: 
 			A LIST OF ALL RULES 
 		'''
-		print("starting constraints logic...")
+		# print("starting constraints logic...")
 		for x in range(len(self.cols)):
 
 			# method to create rule #1
@@ -122,7 +120,7 @@ class Constraints:
 		curr_dir = os.getcwd()
 		out_file = curr_dir + '/data/out/cnf_' + infile + '_out'
 
-		print("writing to file %s" % out_file)
+		# print("writing to file %s" % out_file)
 
 		with open(out_file, "w") as f:
 			for rule in self.all_rules:

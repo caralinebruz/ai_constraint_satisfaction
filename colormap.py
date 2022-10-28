@@ -50,8 +50,8 @@ def map_coloring_via_dpll(infile, lines):
 
 	#... get the names of the colors to be used
 	use_colors = get_colors(num_colors)
-	print("using colors for map:")
-	print(use_colors)
+	# print("using colors for map:")
+	# print(use_colors)
 
 	#
 	# First, parse the input graph file
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	parser.add_argument('graph_file', type=argparse.FileType('r'))
 
 	args = parser.parse_args()
-	print(args)
+	# print(args)
 
 	if args.v:
 		v_verbose = True
