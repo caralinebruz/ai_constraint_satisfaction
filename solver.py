@@ -25,7 +25,6 @@ class Solver:
 	def _snapshot(self, assignment, type_of_assignment, S, V):
 		'''Saves the current assignment AND resolved propagated sentences
 		'''
-		# print("snapshotting before propagating assignment ....")
 		atom = assignment.lstrip('!')
 		this_iteration = {
 							'S': S, 
@@ -46,7 +45,6 @@ class Solver:
 		'''
 		self._snapshot(assignment, type_of_assignment, S, V)
 
-		# print("\nPROPAGATING ASSIGNMENT: %s ; %s" % (assignment, type_of_assignment))
 		new_clauses = []
 		for clause in S:
 
@@ -74,7 +72,6 @@ class Solver:
 					# print("left with the empty sentence, cannot resolve")
 					new_clause = None
 				
-
 			# if assignment = T_RED and CNF contains !T_RED
 			elif '!' + assignment in sentence:
 
@@ -97,13 +94,9 @@ class Solver:
 				new_clause = clause
 
 			new_clauses.append(new_clause)
-
-		# print("new set of clauses:")
-		# print(new_clauses)
 		
 		S1 = new_clauses
 		return S1
-
 
 
 	def obvious_assign(self, atom, V):
@@ -111,7 +104,7 @@ class Solver:
 		'''
 		assignment = True
 		stripped_atom_name = atom.lstrip('!')
-
+		
 		if atom in self.atoms:
 			V[atom] = assignment
 
@@ -120,18 +113,16 @@ class Solver:
 			assignment = False
 			V[stripped_atom_name] = assignment
 
-
 		print("E ASSIGN %s = %s" % (stripped_atom_name, assignment))
-
 		return V
 
 
 	def assign(self, atom: str, assignment: bool, V):
 		'''Assign an atom given a boolean
 		'''
-		print("H ASSIGN %s = %s" % (atom, assignment))
 		V[atom] = assignment
 
+		print("H ASSIGN %s = %s" % (atom, assignment))
 		return V
 
 
@@ -156,8 +147,6 @@ class Solver:
 
 	def _get_pure_literal(self, atom_states):
 		'''Iterates through atom appearances
-			Returns first available pure literal
-			 or returns false if there isnt one.
 		'''
 		for atom, appearances in atom_states.items():
 
@@ -210,7 +199,6 @@ class Solver:
 	def easy_case(self, S):
 		'''If there is a singleton, return it
 			If there is a pure literal, return it
-			 Otherwise return false
 		''' 
 		singleton = self.singleton(S)
 		if singleton:
@@ -276,6 +264,16 @@ class Solver:
 				return last_atom, last_atom_bool, S,V
 
 
+	def assign_unbound_atoms(self,V):
+		'''Assigns any unbound atoms to False
+		'''
+		for atom, assignment in V.items():
+			if not assignment:
+				V[atom] = False
+
+		return V
+
+
 	def do_dpll(self):
 		'''Handler for DPLL Resolution
 		'''
@@ -289,43 +287,35 @@ class Solver:
 
 
 	def dpll(self, S, V):
+		'''Main recursion
+		'''
 
-		# Loop as long as there are easy cases to cherry pick
+		# Loop as long as there are easy cases
 		while True:
 
-			# BASE OF THE RECURSION: SUCCESS OR FAILURE
+			# SUCCESS: RETURN FINISH
 			if self.is_finished(S):
 
-				# assign any unbound atoms
-				# return the assignments (TRANSFORMED)
-				print("success, assign unbound, convert back, return colors")
-
+				V = self.assign_unbound_atoms(V)
 				return V
-				# FINISH STEPS
-				# transform assignments
-				# return transformed assignments
 
+			# EMPTY SENTENCE: RETURN FAIL
 			elif self.has_empty_sentence(S):
-				print("some sentence is unsatisfiable under current assignments.. returning FAIL")
+				print("some sentence is unsatisfiable under current assignments..")
 				return None
 					
-
 			# EASY CASES: PURE LITERAL ELIMINATION AND FORCED ASSIGNMENT
 			elif self.easy_case(S):
+
 				atom_to_assign = self.easy_case(S)
 				V = self.obvious_assign(atom_to_assign, V)
-				# propagate
-				# print("\nEASY CASE: assign %s" % atom_to_assign)
-				# print("propagating assignment: %s" % atom_to_assign)
 				S = self.propagate_assignment(atom_to_assign, 'easy_case', S, V)
 
 			else:
-				# no easy cases, break out of this.
 				break
 
 
-		# HARD CASE: PICK SOME ATOM AND TRY EACH ASSIGNMENT IN TURN
-		# pick the smallest lexicographic atom in unbound
+		# HARD CASE: PICK ATOM AND TRY
 		atom_hard_case = self.pick_hard_case_atom(V,0)
 
 		# print("\n1.HARD CASE: assign %s = %s" % (atom_hard_case, True))
