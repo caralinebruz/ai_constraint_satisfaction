@@ -96,6 +96,10 @@ def map_coloring_via_dpll(infile, lines):
 	S = Solver(clauses, atoms, v_verbose)
 	assignments = S.do_dpll()
 
+	if not assignments:
+		print("NO VALID ASSIGNMENT")
+		exit(1)
+
 	#
 	# FOURTH, convert assignments back to something meaningful
 	#
