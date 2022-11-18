@@ -1,9 +1,16 @@
-# ai_colormap
-Colors an input graph using a minimum number of colors [1-4]. 
+# AI Constraint Satisfaction
+
+Artificial Intelligence class lab 2
+
+Coloring of an input graph using a (given) minimum number of colors [1-4]
 
 ## ABOUT
 
+This code determines color assignment of nodes in a graph based on the rule that no two adjacent edges should share a color.
+
 This code works as a single step to convert the input graph into CNF clauses and then performs DPLL resolution on the constraints. Only a single command performs all steps.
+
+This code does not include the algorithm for computing the minimum number of colors required for the given graph input. It only colors the graph based on adjacent bordering rules.
 
 ## EXECUTION
 
